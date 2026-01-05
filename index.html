@@ -400,7 +400,11 @@
         // ============================================
         async function loadTeachersAndMapping() {
             try {
-                const response = await fetch(WEBHOOK_GET_DATA);
+                const response = await fetch(WEBHOOK_GET_DATA, {
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                });
                 
                 if (!response.ok) {
                     throw new Error('Failed to load data from server');
@@ -558,7 +562,11 @@
 
             try {
                 // Fetch students for this class
-                const response = await fetch(`${WEBHOOK_GET_DATA}?class=${classValue}&section=${section}`);
+                const response = await fetch(`${WEBHOOK_GET_DATA}?class=${classValue}&section=${section}`, {
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                });
                 const data = await response.json();
                 
                 studentsData = data.students || [];
@@ -740,7 +748,8 @@
                 const response = await fetch(WEBHOOK_SUBMIT_MARKS, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
                     },
                     body: JSON.stringify(submissionData)
                 });
