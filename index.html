@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Marks Entry System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: "📋";
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input:disabled, select:disabled {
+            background: #e9ecef;
+            cursor: not-allowed;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .students-table-container {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .students-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .students-table thead {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .students-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .students-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .students-table tbody tr:hover {
+            background: #f0f8ff;
+        }
+
+        .marks-input {
+            width: 100px;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .marks-input:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        .absent-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .submit-container {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #ecf0f1;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            color: #0c5460;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .summary-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Teacher Marks Entry System</h1>
+            <p>Enter marks for your assigned class and subject</p>
+        </div>
+
+        <div class="form-container">
+            <div id="alertBox" class="hidden"></div>
+
+            <!-- Step 1: Teacher & Class Selection -->
+            <div class="section">
+                <div class="section-title">Step 1: Basic Information</div>
+                
+                <div class="form-group">
+                    <label for="teacherSelect">👨‍🏫 Select Teacher *</label>
+                    <select id="teacherSelect" required onchange="onTeacherChange()">
+                        <option value="">-- Select Teacher --</option>
+                    </select>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="classSelect">📚 Select Class *</label>
+                        <select id="classSelect" required onchange="onClassChange()" disabled>
+                            <option value="">-- First Select Teacher --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sectionSelect">🏫 Section</label>
+                        <input type="text" id="sectionSelect" value="A" readonly style="background: #e9ecef;">
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="subjectSelect">📖 Select Subject *</label>
+                        <select id="subjectSelect" required onchange="onSubjectChange()" disabled>
+                            <option value="">-- First Select Class --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxMarks">💯 Maximum Marks *</label>
+                        <input type="number" id="maxMarks" placeholder="Enter max marks" min="1" max="500" required>
+                    </div>
+                </div>
+
+                <button type="button" onclick="loadStudents()" class="btn" id="loadBtn">Load Students</button>
+            </div>
+
+            <!-- Step 2: Marks Entry -->
+            <div id="marksSection" class="section hidden">
+                <div class="section-title">Step 2: Enter Marks</div>
+                
+                <div class="alert alert-info">
+                    💡 <strong>Instructions:</strong> Enter marks for each student (0-<span id="maxMarksDisplay">100</span>) or check "Absent" if the student was absent. 
+                    Mark "A" will be automatically entered for absent students.
+                </div>
+
+                <div class="students-table-container">
+                    <table class="students-table">
+                        <thead>
+                            <tr>
+                                <th>Sr No.</th>
+                                <th>Roll No.</th>
+                                <th>Student Name</th>
+                                <th>Marks Obtained</th>
+                                <th>Absent?</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                            <!-- Students will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="summary-box">
+                    <div class="summary-item">
+                        <strong>Total Students:</strong>
+                        <span id="totalStudents">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Marks Entered:</strong>
+                        <span id="marksEntered">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Remaining:</strong>
+                        <span id="remaining">0</span>
+                    </div>
+                </div>
+
+                <div class="submit-container">
+                    <button type="button" onclick="validateAndSubmit()" class="btn" id="submitBtn">
+                        Submit All Marks
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION - UPDATE THESE URLs
+        // ============================================
+        const N8N_BASE_URL = 'http://localhost:5678'; // Your n8n URL
+        const WEBHOOK_GET_DATA = `${N8N_BASE_URL}/webhook/get-form-data`;
+        const WEBHOOK_SUBMIT_MARKS = `${N8N_BASE_URL}/webhook/submit-marks`;
+
+        // ============================================
+        // GLOBAL VARIABLES
+        // ============================================
+        let teachersData = [];
+        let classSubjectMapping = [];
+        let studentsData = [];
+        let maxMarksValue = 0;
+
+        // ============================================
+        // INITIALIZATION - Load Teachers on Page Load
+        // ============================================
+        window.addEventListener('DOMContentLoaded', async () => {
+            showAlert('Loading teacher data...', 'info');
+            await loadTeachersAndMapping();
+        });
+
+        // ============================================
+        // LOAD TEACHERS AND CLASS-SUBJECT MAPPING
+        // ============================================
+        async function loadTeachersAndMapping() {
+            try {
+                const response = await fetch(WEBHOOK_GET_DATA);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load data from server');
+                }
+
+                const data = await response.json();
+                
+                teachersData = data.teachers || [];
+                classSubjectMapping = data.mapping || [];
+
+                if (teachersData.length === 0) {
+                    showAlert('⚠️ No teachers found in the system!', 'error');
+                    return;
+                }
+
+                // Populate teacher dropdown
+                const teacherSelect = document.getElementById('teacherSelect');
+                teachersData.forEach(teacher => {
+                    const option = document.createElement('option');
+                    option.value = teacher.name;
+                    option.textContent = `${teacher.name} (${teacher.designation})`;
+                    teacherSelect.appendChild(option);
+                });
+
+                showAlert('✅ Data loaded successfully! Please select a teacher.', 'success');
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showAlert('❌ Error loading data. Please refresh the page or contact admin.', 'error');
+            }
+        }
+
+        // ============================================
+        // TEACHER SELECTION CHANGE
+        // ============================================
+        function onTeacherChange() {
+            const teacherName = document.getElementById('teacherSelect').value;
+            const classSelect = document.getElementById('classSelect');
+            const subjectSelect = document.getElementById('subjectSelect');
+
+            // Reset dependent fields
+            classSelect.innerHTML = '<option value="">-- Select Class --</option>';
+            subjectSelect.innerHTML = '<option value="">-- First Select Class --</option>';
+            classSelect.disabled = false;
+            subjectSelect.disabled = true;
+            document.getElementById('marksSection').classList.add('hidden');
+
+            if (!teacherName) {
+                classSelect.disabled = true;
+                return;
+            }
+
+            // Get classes this teacher is assigned to
+            const assignedClasses = [...new Set(
+                classSubjectMapping
+                    .filter(m => m.teacher === teacherName)
+                    .map(m => m.class)
+            )].sort();
+
+            if (assignedClasses.length === 0) {
+                showAlert('⚠️ No classes assigned to this teacher!', 'error');
+                classSelect.disabled = true;
+                return;
+            }
+
+            // Populate class dropdown
+            assignedClasses.forEach(cls => {
+                const option = document.createElement('option');
+                option.value = cls;
+                option.textContent = `Class ${cls}`;
+                classSelect.appendChild(option);
+            });
+        }
+
+        // ============================================
+        // CLASS SELECTION CHANGE
+        // ============================================
+        function onClassChange() {
+            const teacherName = document.getElementById('teacherSelect').value;
+            const classValue = document.getElementById('classSelect').value;
+            const subjectSelect = document.getElementById('subjectSelect');
+
+            subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+            subjectSelect.disabled = false;
+            document.getElementById('marksSection').classList.add('hidden');
+
+            if (!classValue) {
+                subjectSelect.disabled = true;
+                return;
+            }
+
+            // Get subjects this teacher teaches for this class
+            const assignedSubjects = classSubjectMapping
+                .filter(m => m.teacher === teacherName && m.class === classValue)
+                .map(m => ({ subject: m.subject, maxMarks: m.maxMarks }));
+
+            if (assignedSubjects.length === 0) {
+                showAlert('⚠️ No subjects assigned to this teacher for this class!', 'error');
+                subjectSelect.disabled = true;
+                return;
+            }
+
+            // Populate subject dropdown
+            assignedSubjects.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.subject;
+                option.textContent = `${item.subject} (Max: ${item.maxMarks})`;
+                option.dataset.maxMarks = item.maxMarks;
+                subjectSelect.appendChild(option);
+            });
+        }
+
+        // ============================================
+        // SUBJECT SELECTION CHANGE
+        // ============================================
+        function onSubjectChange() {
+            const subjectSelect = document.getElementById('subjectSelect');
+            const selectedOption = subjectSelect.options[subjectSelect.selectedIndex];
+            const maxMarks = selectedOption.dataset.maxMarks;
+
+            if (maxMarks) {
+                document.getElementById('maxMarks').value = maxMarks;
+                document.getElementById('maxMarks').readOnly = true;
+                document.getElementById('maxMarks').style.background = '#e9ecef';
+            }
+        }
+
+        // ============================================
+        // LOAD STUDENTS FOR SELECTED CLASS
+        // ============================================
+        async function loadStudents() {
+            const teacherName = document.getElementById('teacherSelect').value;
+            const classValue = document.getElementById('classSelect').value;
+            const section = document.getElementById('sectionSelect').value;
+            const subject = document.getElementById('subjectSelect').value;
+            const maxMarks = document.getElementById('maxMarks').value;
+
+            if (!teacherName || !classValue || !subject || !maxMarks) {
+                showAlert('❌ Please fill all required fields!', 'error');
+                return;
+            }
+
+            if (maxMarks <= 0 || maxMarks > 500) {
+                showAlert('❌ Maximum marks must be between 1 and 500!', 'error');
+                return;
+            }
+
+            maxMarksValue = parseInt(maxMarks);
+            document.getElementById('maxMarksDisplay').textContent = maxMarksValue;
+
+            // Show loading
+            const loadBtn = document.getElementById('loadBtn');
+            loadBtn.disabled = true;
+            loadBtn.innerHTML = '<span class="loading"></span> Loading...';
+
+            try {
+                // Fetch students for this class
+                const response = await fetch(`${WEBHOOK_GET_DATA}?class=${classValue}&section=${section}`);
+                const data = await response.json();
+                
+                studentsData = data.students || [];
+
+                if (studentsData.length === 0) {
+                    showAlert('⚠️ No students found for this class!', 'error');
+                    loadBtn.disabled = false;
+                    loadBtn.innerHTML = 'Load Students';
+                    return;
+                }
+
+                renderStudentsTable();
+                document.getElementById('marksSection').classList.remove('hidden');
+                showAlert(`✅ Loaded ${studentsData.length} students successfully!`, 'success');
+                
+                // Smooth scroll to marks section
+                setTimeout(() => {
+                    document.getElementById('marksSection').scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+
+            } catch (error) {
+                console.error('Error loading students:', error);
+                showAlert('❌ Error loading students. Please try again.', 'error');
+            } finally {
+                loadBtn.disabled = false;
+                loadBtn.innerHTML = 'Load Students';
+            }
+        }
+
+        // ============================================
+        // RENDER STUDENTS TABLE
+        // ============================================
+        function renderStudentsTable() {
+            const tbody = document.getElementById('studentsTableBody');
+            tbody.innerHTML = '';
+
+            studentsData.forEach((student, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><strong>${student.rollNo}</strong></td>
+                    <td>${student.name}</td>
+                    <td>
+                        <input type="number" 
+                               class="marks-input" 
+                               id="marks_${student.rollNo}"
+                               min="0" 
+                               max="${maxMarksValue}"
+                               placeholder="0-${maxMarksValue}"
+                               onchange="updateSummary()">
+                    </td>
+                    <td style="text-align: center;">
+                        <input type="checkbox" 
+                               class="absent-checkbox" 
+                               id="absent_${student.rollNo}"
+                               onchange="handleAbsentChange('${student.rollNo}')">
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            updateSummary();
+        }
+
+        // ============================================
+        // HANDLE ABSENT CHECKBOX
+        // ============================================
+        function handleAbsentChange(rollNo) {
+            const checkbox = document.getElementById(`absent_${rollNo}`);
+            const marksInput = document.getElementById(`marks_${rollNo}`);
+
+            if (checkbox.checked) {
+                marksInput.value = '';
+                marksInput.disabled = true;
+                marksInput.style.background = '#e9ecef';
+            } else {
+                marksInput.disabled = false;
+                marksInput.style.background = 'white';
+            }
+            updateSummary();
+        }
+
+        // ============================================
+        // UPDATE SUMMARY COUNTS
+        // ============================================
+        function updateSummary() {
+            let entered = 0;
+            studentsData.forEach(student => {
+                const marksInput = document.getElementById(`marks_${student.rollNo}`);
+                const absentCheckbox = document.getElementById(`absent_${student.rollNo}`);
+                
+                if (marksInput.value !== '' || absentCheckbox.checked) {
+                    entered++;
+                }
+            });
+
+            document.getElementById('totalStudents').textContent = studentsData.length;
+            document.getElementById('marksEntered').textContent = entered;
+            document.getElementById('remaining').textContent = studentsData.length - entered;
+        }
+
+        // ============================================
+        // VALIDATE AND SUBMIT MARKS
+        // ============================================
+        async function validateAndSubmit() {
+            const teacherName = document.getElementById('teacherSelect').value;
+            const classValue = document.getElementById('classSelect').value;
+            const section = document.getElementById('sectionSelect').value;
+            const subject = document.getElementById('subjectSelect').value;
+
+            // Collect all marks
+            const submissions = [];
+            let hasError = false;
+            let errorMessage = '';
+
+            studentsData.forEach(student => {
+                const marksInput = document.getElementById(`marks_${student.rollNo}`);
+                const absentCheckbox = document.getElementById(`absent_${student.rollNo}`);
+
+                let marks = marksInput.value;
+                let status = 'Present';
+
+                if (absentCheckbox.checked) {
+                    marks = 'A';
+                    status = 'Absent';
+                } else if (marks === '') {
+                    hasError = true;
+                    errorMessage = `❌ Please enter marks for ${student.name} (Roll No: ${student.rollNo}) or mark as absent.`;
+                    return;
+                } else {
+                    marks = parseInt(marks);
+                    if (marks > maxMarksValue) {
+                        hasError = true;
+                        errorMessage = `❌ Marks for ${student.name} cannot exceed ${maxMarksValue}!`;
+                        return;
+                    }
+                    if (marks < 0) {
+                        hasError = true;
+                        errorMessage = `❌ Marks for ${student.name} cannot be negative!`;
+                        return;
+                    }
+                }
+
+                submissions.push({
+                    rollNo: student.rollNo,
+                    studentName: student.name,
+                    marksObtained: marks,
+                    status: status
+                });
+            });
+
+            if (hasError) {
+                showAlert(errorMessage, 'error');
+                return;
+            }
+
+            // Calculate pass marks (33% of max)
+            const passMarks = Math.ceil(maxMarksValue * 0.33);
+
+            // Prepare data for submission
+            const submissionData = {
+                teacherName: teacherName,
+                class: classValue,
+                section: section,
+                subject: subject,
+                maxMarks: maxMarksValue,
+                passMarks: passMarks,
+                timestamp: new Date().toISOString(),
+                students: submissions
+            };
+
+            // Disable submit button
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span> Submitting...';
+
+            try {
+                // Send to n8n webhook
+                const response = await fetch(WEBHOOK_SUBMIT_MARKS, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(submissionData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showAlert('✅ Marks submitted successfully! Redirecting...', 'success');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    throw new Error('Submission failed');
+                }
+            } catch (error) {
+                console.error('Submission error:', error);
+                showAlert('❌ Error submitting marks. Please try again or contact admin.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Submit All Marks';
+            }
+        }
+
+        // ============================================
+        // SHOW ALERT MESSAGE
+        // ============================================
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.className = `alert alert-${type}`;
+            alertBox.textContent = message;
+            alertBox.classList.remove('hidden');
+            
+            if (type !== 'error') {
+                setTimeout(() => alertBox.classList.add('hidden'), 5000);
+            }
+        }
+    </script>
+</body>
+</html>
