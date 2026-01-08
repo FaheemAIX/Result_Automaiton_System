@@ -279,9 +279,32 @@
         <div class="form-container">
             <div id="alertBox" class="hidden"></div>
 
+            <!-- Debug Panel -->
+            <div class="section" style="background: #fff3cd; border-left-color: #ffc107;">
+                <div style="font-size: 0.9em;">
+                    <strong>🔧 Connection Status:</strong>
+                    <div style="margin-top: 10px;">
+                        <span id="connectionStatus">Checking connection...</span>
+                        <button onclick="testConnection()" class="btn" style="padding: 8px 20px; font-size: 0.9em; margin-left: 10px;">
+                            Test Connection
+                        </button>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 0.85em; color: #666;">
+                        <strong>Webhook URL:</strong> <span id="webhookDisplay" style="font-family: monospace; word-break: break-all;"></span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Step 1: Teacher & Class Selection -->
             <div class="section">
                 <div class="section-title">Step 1: Basic Information</div>
+                
+                <!-- Debug info -->
+                <div id="debugInfo" style="background: #e7f3ff; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 0.85em; display: none;">
+                    <strong>🔍 Debug Info:</strong><br>
+                    Selected Class: <span id="debugClass">-</span><br>
+                    Students loaded: <span id="debugStudentCount">0</span>
+                </div>
                 
                 <div class="form-group">
                     <label for="teacherSelect">👨‍🏫 Select Teacher *</label>
@@ -376,9 +399,8 @@
         // CONFIGURATION - UPDATE THESE URLs
         // ============================================
         const N8N_BASE_URL = 'https://scopeless-melony-autonomically.ngrok-free.dev'; // Your n8n URL
-        const WEBHOOK_GET_DATA = `${N8N_BASE_URL}/webhook/get-form-data`;
-        const WEBHOOK_SUBMIT_MARKS = `${N8N_BASE_URL}/webhook/submit-marks`;
-
+        const WEBHOOK_GET_DATA = 'https://scopeless-melony-autonomically.ngrok-free.dev/webhook/get-form-data';
+        const WEBHOOK_SUBMIT_MARKS = 'https://scopeless-melony-autonomically.ngrok-free.dev/webhook/submit-marks';
         // ============================================
         // GLOBAL VARIABLES
         // ============================================
@@ -391,15 +413,59 @@
         // INITIALIZATION - Load Teachers on Page Load
         // ============================================
         window.addEventListener('DOMContentLoaded', async () => {
+            // Display webhook URL for debugging
+            document.getElementById('webhookDisplay').textContent = WEBHOOK_GET_DATA;
+            
             showAlert('Loading teacher data...', 'info');
             await loadTeachersAndMapping();
         });
+
+        // ============================================
+        // TEST CONNECTION FUNCTION
+        // ============================================
+        async function testConnection() {
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.textContent = 'Testing connection...';
+            statusEl.style.color = '#856404';
+            
+            try {
+                console.log('Testing connection to:', WEBHOOK_GET_DATA);
+                
+                const response = await fetch(WEBHOOK_GET_DATA, {
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Connection test successful! Data:', data);
+                
+                statusEl.textContent = `✅ Connected! (${data.teachers?.length || 0} teachers, ${data.mapping?.length || 0} mappings)`;
+                statusEl.style.color = '#155724';
+                
+                showAlert('✅ Connection test successful!', 'success');
+                
+            } catch (error) {
+                console.error('Connection test failed:', error);
+                statusEl.textContent = `❌ Connection failed: ${error.message}`;
+                statusEl.style.color = '#721c24';
+                showAlert(`❌ Connection test failed: ${error.message}`, 'error');
+            }
+        }
 
         // ============================================
         // LOAD TEACHERS AND CLASS-SUBJECT MAPPING
         // ============================================
         async function loadTeachersAndMapping() {
             try {
+                // Fetch only teachers and mapping (no class parameter = no students)
                 const response = await fetch(WEBHOOK_GET_DATA, {
                     headers: {
                         'ngrok-skip-browser-warning': 'true'
@@ -412,28 +478,52 @@
 
                 const data = await response.json();
                 
+                // Debug: Log the response
+                console.log('API Response:', data);
+                
+                // Check if there's an error in response
+                if (data.error) {
+                    throw new Error(data.message || 'API returned an error');
+                }
+                
                 teachersData = data.teachers || [];
                 classSubjectMapping = data.mapping || [];
+                
+                // Don't load students here - they'll be loaded when class is selected
+                studentsData = [];
+
+                // Debug: Log counts
+                console.log('Teachers loaded:', teachersData.length);
+                console.log('Mappings loaded:', classSubjectMapping.length);
+                console.log('Students: Will load when class is selected');
 
                 if (teachersData.length === 0) {
                     showAlert('⚠️ No teachers found in the system!', 'error');
+                    console.error('No teachers in response. Full data:', data);
                     return;
                 }
 
                 // Populate teacher dropdown
                 const teacherSelect = document.getElementById('teacherSelect');
+                teacherSelect.innerHTML = '<option value="">-- Select Teacher --</option>';
+                
                 teachersData.forEach(teacher => {
                     const option = document.createElement('option');
                     option.value = teacher.name;
-                    option.textContent = `${teacher.name} (${teacher.designation})`;
+                    option.textContent = `${teacher.name}${teacher.designation ? ' (' + teacher.designation + ')' : ''}`;
                     teacherSelect.appendChild(option);
                 });
 
-                showAlert('✅ Data loaded successfully! Please select a teacher.', 'success');
+                showAlert(`✅ Data loaded successfully! (${teachersData.length} teachers, ${classSubjectMapping.length} mappings)`, 'success');
                 
             } catch (error) {
                 console.error('Error loading data:', error);
-                showAlert('❌ Error loading data. Please refresh the page or contact admin.', 'error');
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    webhookUrl: WEBHOOK_GET_DATA
+                });
+                showAlert(`❌ Error loading data: ${error.message}. Check console (F12) for details.`, 'error');
             }
         }
 
@@ -561,26 +651,41 @@
             loadBtn.innerHTML = '<span class="loading"></span> Loading...';
 
             try {
-                // Fetch students for this class
-                const response = await fetch(`${WEBHOOK_GET_DATA}?class=${classValue}&section=${section}`, {
+                // Fetch students for this class with query parameters
+                const url = `${WEBHOOK_GET_DATA}?class=${classValue}&section=${section}`;
+                console.log('Fetching students from:', url);
+                
+                const response = await fetch(url, {
                     headers: {
                         'ngrok-skip-browser-warning': 'true'
                     }
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
+                console.log('Received data:', data);
+                console.log('Students for class ' + classValue + ':', data.students);
                 
                 studentsData = data.students || [];
 
                 if (studentsData.length === 0) {
-                    showAlert('⚠️ No students found for this class!', 'error');
+                    showAlert(`⚠️ No students found for Class ${classValue}, Section ${section}!`, 'error');
                     loadBtn.disabled = false;
                     loadBtn.innerHTML = 'Load Students';
                     return;
                 }
 
+                // Update debug info
+                document.getElementById('debugInfo').style.display = 'block';
+                document.getElementById('debugClass').textContent = `${classValue} - Section ${section}`;
+                document.getElementById('debugStudentCount').textContent = studentsData.length;
+
                 renderStudentsTable();
                 document.getElementById('marksSection').classList.remove('hidden');
-                showAlert(`✅ Loaded ${studentsData.length} students successfully!`, 'success');
+                showAlert(`✅ Loaded ${studentsData.length} students from Class ${classValue}, Section ${section}!`, 'success');
                 
                 // Smooth scroll to marks section
                 setTimeout(() => {
