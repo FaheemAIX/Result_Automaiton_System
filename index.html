@@ -401,6 +401,7 @@
         const N8N_BASE_URL = 'https://scopeless-melony-autonomically.ngrok-free.dev'; // Your n8n URL
         const WEBHOOK_GET_DATA = 'https://scopeless-melony-autonomically.ngrok-free.dev/webhook/get-form-data';
         const WEBHOOK_SUBMIT_MARKS = 'https://scopeless-melony-autonomically.ngrok-free.dev/webhook/submit-marks';
+
         // ============================================
         // GLOBAL VARIABLES
         // ============================================
@@ -651,9 +652,10 @@
             loadBtn.innerHTML = '<span class="loading"></span> Loading...';
 
             try {
-                // Fetch students for this class with query parameters
-                const url = `${WEBHOOK_GET_DATA}?class=${classValue}&section=${section}`;
+                // Fetch students for this class with query parameters INCLUDING subject
+                const url = `${WEBHOOK_GET_DATA}?class=${classValue}&section=${section}&subject=${encodeURIComponent(subject)}`;
                 console.log('Fetching students from:', url);
+                console.log('For subject:', subject);
                 
                 const response = await fetch(url, {
                     headers: {
@@ -680,12 +682,21 @@
 
                 // Update debug info
                 document.getElementById('debugInfo').style.display = 'block';
-                document.getElementById('debugClass').textContent = `${classValue} - Section ${section}`;
+                document.getElementById('debugClass').textContent = `${classValue} - Section ${section} - ${subject}`;
                 document.getElementById('debugStudentCount').textContent = studentsData.length;
+                
+                // Show group info if class 9 or 10
+                let groupInfo = '';
+                if ((classValue === '9' || classValue === '10') && studentsData.length > 0) {
+                    const groups = [...new Set(studentsData.map(s => s.group).filter(g => g))];
+                    if (groups.length > 0) {
+                        groupInfo = ` (${groups.join(', ')} group)`;
+                    }
+                }
 
                 renderStudentsTable();
                 document.getElementById('marksSection').classList.remove('hidden');
-                showAlert(`✅ Loaded ${studentsData.length} students from Class ${classValue}, Section ${section}!`, 'success');
+                showAlert(`✅ Loaded ${studentsData.length} students from Class ${classValue}, Section ${section}${groupInfo}!`, 'success');
                 
                 // Smooth scroll to marks section
                 setTimeout(() => {
